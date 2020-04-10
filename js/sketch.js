@@ -49,7 +49,7 @@ function preload() {
   // load static assets here
   // just the loadings, not assignments
   for (let i = 1; i <= 11; i++) {
-    cloudImages.push(loadImage(`images/cloud-${(i < 10 ? "0" + i : i)}.svg`));
+    cloudImages.push(loadImage(`images/cloud-${i < 10 ? "0" + i : i}.svg`));
   }
 }
 
@@ -83,14 +83,16 @@ function generateClouds() {
   }
 }
 
-function generateSprings() {
-
-}
+function generateSprings() {}
 
 function drawBackground() {
   background(111, 197, 206);
-  for (let i = 0; i < clouds.length; i++) {
-    image(clouds[i].image, clouds[i].x, clouds[i].y);
+  for (let i = 0; i < random() * 5; i++) {
+    image(
+      cloudImages[Math.floor(random() * cloudImages.length)],
+      random() * canvasWidth,
+      random() * canvasHeight
+    );
   }
 }
 
@@ -157,21 +159,31 @@ function updateSpring() {
 
   if (move) {
     springLocation.y = playerLocation.y + playerHeight - 30;
-    if (springLocation.y > springRestLocation.y + springInitialHeight - springMinHeight) {
-      springLocation.y = springRestLocation.y + springInitialHeight - springMinHeight;
+    if (
+      springLocation.y >
+      springRestLocation.y + springInitialHeight - springMinHeight
+    ) {
+      springLocation.y =
+        springRestLocation.y + springInitialHeight - springMinHeight;
     }
-    if (springLocation.y < springRestLocation.y - (springMaxHeight - springInitialHeight)) {
-      springLocation.y = springRestLocation.y - (springMaxHeight - springInitialHeight);
+    if (
+      springLocation.y <
+      springRestLocation.y - (springMaxHeight - springInitialHeight)
+    ) {
+      springLocation.y =
+        springRestLocation.y - (springMaxHeight - springInitialHeight);
     }
   }
 
   if (springLocation.y > springRestLocation.y) {
-    springHeight = springRestLocation.y + springInitialHeight - springLocation.y;
+    springHeight =
+      springRestLocation.y + springInitialHeight - springLocation.y;
   }
   if (springLocation.y < springRestLocation.y) {
-    springHeight = springRestLocation.y - springLocation.y + springInitialHeight;
+    springHeight =
+      springRestLocation.y - springLocation.y + springInitialHeight;
   }
-  springWidth = 1 * 5000 / springHeight;
+  springWidth = (1 * 5000) / springHeight;
   springLocation.x = (canvasWidth - springWidth) / 2;
 }
 
@@ -181,7 +193,10 @@ function drawSpring() {
 }
 
 function checkMove() {
-  if (playerLocation.y + playerHeight - 30 > springRestLocation.y && playerLocation.y < springRestLocation.y + springInitialHeight) {
+  if (
+    playerLocation.y + playerHeight - 30 > springRestLocation.y &&
+    playerLocation.y < springRestLocation.y + springInitialHeight
+  ) {
     playerVelocity.y = -700;
     move = true;
   } else {
