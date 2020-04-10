@@ -5,7 +5,7 @@ const canvasWidth = document.body.clientWidth;
 const canvasHeight = document.body.clientHeight;
 const framesPerSecond = 60;
 const framesTimeInterval = 1 / framesPerSecond;
-const pixelsPerMeter = 100;
+const pixelsPerMeter = 300;
 
 // game assets
 let cloudImages = [];
