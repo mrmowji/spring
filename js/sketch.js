@@ -49,7 +49,7 @@ function preload() {
   // load static assets here
   // just the loadings, not assignments
   for (let i = 1; i <= 11; i++) {
-    cloudImages.push(loadImage(`images/${(i < 10 ? "0" + i : i)}.svg`));
+    cloudImages.push(loadImage(`images/cloud-${(i < 10 ? "0" + i : i)}.svg`));
   }
 }
 
