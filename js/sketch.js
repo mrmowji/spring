@@ -90,7 +90,7 @@ function generateSprings() {
 function drawBackground() {
   background(111, 197, 206);
   for (let i = 0; i < clouds.length; i++) {
-    image(clouds[i].image, clouds[i].x, couds[i].y);
+    image(clouds[i].image, clouds[i].x, clouds[i].y);
   }
 }
 
