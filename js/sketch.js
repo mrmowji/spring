@@ -104,9 +104,9 @@ function updatePlayerAcceleration() {
     (mouseIsPressed && mouseX < canvasWidth / 2) ||
     (keyIsPressed && keyCode === LEFT_ARROW);
   if (isRightPressed) {
-    playerAcceleration.x *= pixelsPerMeter;
+    playerAcceleration.x = 10 * pixelsPerMeter;
   } else if (isLeftPressed) {
-    playerAcceleration.x *= -pixelsPerMeter;
+    playerAcceleration.x = -10 * pixelsPerMeter;
   }
 }
 
