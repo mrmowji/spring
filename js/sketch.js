@@ -76,7 +76,7 @@ function draw() {
 function generateClouds() {
   for (let i = 0; i < random() * 5; i++) {
     clouds.push({
-      image: cloudImages[random() * cloudImages.length],
+      image: cloudImages[Math.floor(random() * cloudImages.length)],
       x: random() * canvasWidth,
       y: random() * canvasHeight,
     });
