@@ -5,13 +5,13 @@ const canvasWidth = document.body.clientWidth;
 const canvasHeight = document.body.clientHeight;
 const framesPerSecond = 60;
 const framesTimeInterval = 1 / framesPerSecond;
-const pixelsPerMeter = 300;
+let pixelsPerMeter = 100;
 
 // game assets
 let cloudImages = [];
 
 // player variables
-let playerAcceleration = { x: 0, y: 9.8 };
+let playerAcceleration = { x: 0, y: 9.8 * pixelsPerMeter };
 let playerVelocity = { x: 0, y: 0 };
 let playerLocation = { x: canvasWidth / 2, y: 60 };
 let playerWidth = 60;
