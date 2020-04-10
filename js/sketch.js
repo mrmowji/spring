@@ -5,6 +5,7 @@ const canvasWidth = document.body.clientWidth;
 const canvasHeight = document.body.clientHeight;
 const framesPerSecond = 60;
 const framesTimeInterval = 1 / framesPerSecond;
+const pixelsPerMeter = 100;
 
 // game assets
 let cloudImages = [];
@@ -79,6 +80,7 @@ function generateClouds() {
       imageIndex: Math.floor(random() * cloudImages.length),
       x: random() * canvasWidth,
       y: random() * canvasHeight,
+      distance: random() * 10,
     });
   }
 }
@@ -102,20 +104,20 @@ function updatePlayerAcceleration() {
     (mouseIsPressed && mouseX < canvasWidth / 2) ||
     (keyIsPressed && keyCode === LEFT_ARROW);
   if (isRightPressed) {
-    playerAcceleration.x = 2000;
+    playerAcceleration.x *= pixelsPerMeter;
   } else if (isLeftPressed) {
-    playerAcceleration.x = -2000;
+    playerAcceleration.x *= -pixelsPerMeter;
   }
 }
 
 function updatePlayerLocation() {
   let deltaLocation = {
     x:
-      0.5 * playerAcceleration.x * framesTimeInterval ** 2 +
-      playerVelocity.x * framesTimeInterval,
+      (0.5 * playerAcceleration.x * framesTimeInterval ** 2 +
+      playerVelocity.x * framesTimeInterval),
     y:
-      0.5 * playerAcceleration.y * framesTimeInterval ** 2 +
-      playerVelocity.y * framesTimeInterval,
+      (0.5 * playerAcceleration.y * framesTimeInterval ** 2 +
+      playerVelocity.y * framesTimeInterval),
   };
   playerLocation = {
     x: deltaLocation.x + playerLocation.x,
@@ -131,8 +133,8 @@ function updatePlayerVelocity() {
     x: playerVelocity.x + playerAcceleration.x * framesTimeInterval,
     y: playerVelocity.y + playerAcceleration.y * framesTimeInterval,
   };
-  if (Math.abs(playerVelocity.x) > 400) {
-    playerVelocity.x = (playerVelocity.x < 0 ? -1 : 1) * 400;
+  if (Math.abs(playerVelocity.x) > 4 * pixelsPerMeter) {
+    playerVelocity.x = (playerVelocity.x < 0 ? -1 : 1) * 4 * pixelsPerMeter;
   }
 }
 
@@ -182,7 +184,7 @@ function drawSpring() {
 
 function checkMove() {
   if (playerLocation.y + playerHeight - 30 > springRestLocation.y && playerLocation.y < springRestLocation.y + springInitialHeight) {
-    playerVelocity.y = -700;
+    playerVelocity.y *= -1;
     move = true;
   } else {
     move = false;
