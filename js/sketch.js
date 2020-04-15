@@ -20,29 +20,6 @@ let playerHeight = 60;
 let springs = [];
 let clouds = [];
 
-// spring constants
-let springWidth = 100;
-let springHeight = 50;
-let springInitialHeight = springHeight;
-let springMinHeight = 25;
-let springMaxHeight = 75;
-
-// spring simulation constants
-let springMass = 0.8;
-let springConstant = 0.2;
-let D = 0.92; // Damping
-let springRestLocation = { y: canvasHeight - springHeight - 200 };
-
-// spring simulation variables
-let springLocation = {
-  x: (canvasWidth - springWidth) / 2,
-  y: springRestLocation.y,
-};
-let springVelocity = 0.0;
-let springAcceleration = 0;
-let springForce = 0;
-let move = false;
-
 // this is global namespace mode
 // you can use instance mode:
 // let app = new p5(function (p) { p.setup = function() ... });
@@ -50,7 +27,7 @@ function preload() {
   // load static assets here
   // just the loadings, not assignments
   for (let i = 1; i <= 11; i++) {
-    cloudImages.push(loadImage(`images/cloud-${(i < 10 ? "0" + i : i)}.svg`));
+    cloudImages.push(loadImage(`images/cloud-${i < 10 ? "0" + i : i}.svg`));
   }
 }
 
@@ -71,20 +48,21 @@ function draw() {
   updatePlayerVelocity();
   updateClouds();
   drawPlayer();
-  checkMove();
-  updateSpring();
-  drawSpring();
+  generateSprings();
+  checkSpringsHit();
+  updateSprings();
+  drawSprings();
 }
 
 function doByInterval() {
-  setInterval(function() {
+  setInterval(function () {
     clouds.push({
       imageIndex: Math.floor(random() * cloudImages.length),
       x: random() * canvasWidth + canvasWidth,
       y: random() * canvasHeight,
       distance: random() * 10,
     });
-  }, 2000);
+  }, 5000);
 }
 
 function generateClouds() {
@@ -103,14 +81,113 @@ function updateClouds() {
     clouds[i].x--;
   }
   for (let i = clouds.length - 1; i >= 0; i--) {
-    if (clouds[i].x < (-cloudImages[clouds[i].imageIndex].width - 10)) {
+    if (clouds[i].x < -cloudImages[clouds[i].imageIndex].width - 10) {
       clouds.splice(i, 1);
     }
   }
 }
 
-function generateSprings() {
+function Spring(x, y, width = 100) {
+  this.restLocation = { y: y };
+  this.location = {
+    x: x,
+    y: y,
+  };
+  this.hit = false;
+  this.width = width;
+  this.height = 50;
+  this.initialHeight = this.height;
+  this.minHeight = 25;
+  this.maxHeight = 75;
 
+  // spring simulation constants
+  this.mass = 0.8;
+  this.constant = 0.2;
+  this.d = 0.92; // Damping
+
+  // spring simulation variables
+  this.velocity = 0.0;
+  this.acceleration = 0;
+  this.force = 0;
+
+  this.update = function () {
+    if (!this.hit) {
+      this.force = -this.constant * (this.location.y - this.restLocation.y);
+      this.acceleration = this.force / this.mass;
+      this.velocity = this.d * (this.velocity + this.acceleration);
+      this.location.y = this.location.y + this.velocity;
+    }
+
+    if (abs(this.velocity) < 0.1) {
+      this.velocity = 0.0;
+    }
+
+    if (this.hit) {
+      this.location.y = playerLocation.y + playerHeight - 30;
+      if (
+        this.location.y >
+        this.restLocation.y + this.initialHeight - this.minHeight
+      ) {
+        this.location.y =
+          this.restLocation.y + this.initialHeight - this.minHeight;
+      }
+      if (
+        this.location.y <
+        this.restLocation.y - (this.maxHeight - this.initialHeight)
+      ) {
+        this.location.y =
+          this.restLocation.y - (this.maxHeight - this.initialHeight);
+      }
+    }
+
+    if (this.location.y > this.restLocation.y) {
+      this.height = this.restLocation.y + this.initialHeight - this.location.y;
+    }
+    if (this.location.y < this.restLocation.y) {
+      this.height = this.restLocation.y - this.location.y + this.initialHeight;
+    }
+    let deltaWidth = this.width - (1 * 5000) / this.height;
+    this.width -= deltaWidth;
+    if (deltaWidth < 0) {
+      this.location.x = this.location.x - -deltaWidth / 2;
+    } else {
+      this.location.x = this.location.x + deltaWidth / 2;
+    }
+  };
+
+  this.draw = function () {
+    fill(227, 64, 0);
+    rect(this.location.x, this.location.y, this.width, this.height, 20);
+  };
+
+  this.checkHit = function () {
+    if (
+      playerLocation.y + playerHeight - 30 > this.location.y &&
+      playerLocation.y < this.location.y + this.initialHeight &&
+      playerLocation.x >= this.location.x &&
+      playerLocation.x <= this.location.x + this.width
+    ) {
+      playerVelocity.y *= -1;
+      this.hit = true;
+    } else {
+      this.hit = false;
+    }
+  };
+}
+
+function generateSprings() {
+  if (springs.length === 0) {
+    springs.push(new Spring((canvasWidth - 100) / 2, canvasHeight - 50 - 200));
+  } else {
+    while (springs[springs.length - 1].location.x + springs[springs.length - 1].width < canvasWidth) {
+      let x = generateRandomInteger(
+        springs[springs.length - 1].location.x + 200,
+        springs[springs.length - 1].location.x + 400
+      );
+      let y = generateRandomInteger(canvasHeight - 300, canvasHeight - 100);
+      springs.push(new Spring(x, y));
+    }
+  }
 }
 
 function drawBackground() {
@@ -131,22 +208,31 @@ function updatePlayerAcceleration() {
     playerAcceleration.x = 10 * pixelsPerMeter;
   } else if (isLeftPressed) {
     playerAcceleration.x = -10 * pixelsPerMeter;
+  } else {
+    playerAcceleration.x = 0;
   }
 }
 
 function updatePlayerLocation() {
   let deltaLocation = {
     x:
-      (0.5 * playerAcceleration.x * framesTimeInterval ** 2 +
-      playerVelocity.x * framesTimeInterval),
+      0.5 * playerAcceleration.x * framesTimeInterval ** 2 +
+      playerVelocity.x * framesTimeInterval,
     y:
-      (0.5 * playerAcceleration.y * framesTimeInterval ** 2 +
-      playerVelocity.y * framesTimeInterval),
+      0.5 * playerAcceleration.y * framesTimeInterval ** 2 +
+      playerVelocity.y * framesTimeInterval,
   };
-  playerLocation = {
-    x: deltaLocation.x + playerLocation.x,
-    y: deltaLocation.y + playerLocation.y,
-  };
+  if (deltaLocation.x + playerLocation.x <= canvasWidth / 2) {
+    playerLocation = {
+      x: deltaLocation.x + playerLocation.x,
+      y: deltaLocation.y + playerLocation.y,
+    };
+  } else {
+    playerLocation.y += deltaLocation.y;
+    for (let spring of springs) {
+      spring.location.x += -deltaLocation.x;
+    }
+  }
   if (playerLocation.y + playerHeight - 1000 > canvasHeight) {
     noLoop();
   }
@@ -169,48 +255,24 @@ function drawPlayer() {
   ellipse(playerLocation.x, playerLocation.y, playerWidth, playerHeight);
 }
 
-function updateSpring() {
-  if (!move) {
-    springForce = -springConstant * (springLocation.y - springRestLocation.y);
-    springAcceleration = springForce / springMass;
-    springVelocity = D * (springVelocity + springAcceleration);
-    springLocation.y = springLocation.y + springVelocity;
+function updateSprings() {
+  for (let spring of springs) {
+    spring.update();
   }
-
-  if (abs(springVelocity) < 0.1) {
-    springVelocity = 0.0;
-  }
-
-  if (move) {
-    springLocation.y = playerLocation.y + playerHeight - 30;
-    if (springLocation.y > springRestLocation.y + springInitialHeight - springMinHeight) {
-      springLocation.y = springRestLocation.y + springInitialHeight - springMinHeight;
-    }
-    if (springLocation.y < springRestLocation.y - (springMaxHeight - springInitialHeight)) {
-      springLocation.y = springRestLocation.y - (springMaxHeight - springInitialHeight);
-    }
-  }
-
-  if (springLocation.y > springRestLocation.y) {
-    springHeight = springRestLocation.y + springInitialHeight - springLocation.y;
-  }
-  if (springLocation.y < springRestLocation.y) {
-    springHeight = springRestLocation.y - springLocation.y + springInitialHeight;
-  }
-  springWidth = 1 * 5000 / springHeight;
-  springLocation.x = (canvasWidth - springWidth) / 2;
 }
 
-function drawSpring() {
-  fill(227, 64, 0);
-  rect(springLocation.x, springLocation.y, springWidth, springHeight, 20);
+function drawSprings() {
+  for (let spring of springs) {
+    spring.draw();
+  }
 }
 
-function checkMove() {
-  if (playerLocation.y + playerHeight - 30 > springRestLocation.y && playerLocation.y < springRestLocation.y + springInitialHeight) {
-    playerVelocity.y *= -1;
-    move = true;
-  } else {
-    move = false;
+function checkSpringsHit() {
+  for (let spring of springs) {
+    spring.checkHit();
   }
+}
+
+function generateRandomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
