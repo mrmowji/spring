@@ -90,6 +90,21 @@ function updateClouds() {
   for (let i = 0; i < clouds.length; i++) {
     clouds[i].x--;
   }
+  let numberOfDeleted = 0;
+  for (let i = clouds.length - 1; i >= 0; i--) {
+    if (clouds[i].x <= -100) {
+      clouds.splice(i, 1);
+      numberOfDeleted++;
+    }
+  }
+  for (let i = 0; i < numberOfDeleted; i++) {
+    clouds.push({
+      imageIndex: Math.floor(random() * cloudImages.length),
+      x: random() * canvasWidth + canvasWidth,
+      y: random() * canvasHeight,
+      distance: random() * 10,
+    });
+  }
 }
 
 function generateSprings() {
