@@ -68,6 +68,7 @@ function draw() {
   updatePlayerAcceleration();
   updatePlayerLocation();
   updatePlayerVelocity();
+  updateClouds();
   drawPlayer();
   checkMove();
   updateSpring();
@@ -82,6 +83,12 @@ function generateClouds() {
       y: random() * canvasHeight,
       distance: random() * 10,
     });
+  }
+}
+
+function updateClouds() {
+  for (let i = 0; i < clouds.length; i++) {
+    clouds[i].x--;
   }
 }
 
