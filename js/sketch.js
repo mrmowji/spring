@@ -60,6 +60,7 @@ function setup() {
   generateSprings();
   drawBackground();
   drawPlayer();
+  doByInterval(); // must be after the game is started
 }
 
 function draw() {
@@ -75,6 +76,17 @@ function draw() {
   drawSpring();
 }
 
+function doByInterval() {
+  setInterval(function() {
+    clouds.push({
+      imageIndex: Math.floor(random() * cloudImages.length),
+      x: random() * canvasWidth + canvasWidth,
+      y: random() * canvasHeight,
+      distance: random() * 10,
+    });
+  }, 2000);
+}
+
 function generateClouds() {
   for (let i = 0; i < random() * 5; i++) {
     clouds.push({
@@ -87,25 +99,13 @@ function generateClouds() {
 }
 
 function updateClouds() {
-  let numberOfNewClouds = 0;
   for (let i = 0; i < clouds.length; i++) {
     clouds[i].x--;
-    if (clouds[i].x < (canvasWidth - cloudImages[clouds[i].imageIndex].width - 10)) {
-      numberOfNewClouds++;
-    }
   }
   for (let i = clouds.length - 1; i >= 0; i--) {
     if (clouds[i].x < (-cloudImages[clouds[i].imageIndex].width - 10)) {
       clouds.splice(i, 1);
     }
-  }
-  for (let i = 0; i < Math.min(5 - clouds.length, numberOfNewClouds); i++) {
-    clouds.push({
-      imageIndex: Math.floor(random() * cloudImages.length),
-      x: random() * canvasWidth + canvasWidth,
-      y: random() * canvasHeight,
-      distance: random() * 10,
-    });
   }
 }
 
