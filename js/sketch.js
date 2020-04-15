@@ -90,10 +90,9 @@ function updateClouds() {
   let numberOfNewClouds = 0;
   for (let i = 0; i < clouds.length; i++) {
     clouds[i].x--;
-    if (clouds[i].x == canvasWidth / 2 - 10) {
+    if (clouds[i].x == Math.floor(canvasWidth / 2) - 10) {
       numberOfNewClouds++;
     }
-
   }
   for (let i = clouds.length - 1; i >= 0; i--) {
     if (clouds[i].x < (-cloudImages[clouds[i].imageIndex].width - 10)) {
