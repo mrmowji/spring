@@ -92,7 +92,7 @@ function updateClouds() {
   }
   let numberOfDeleted = 0;
   for (let i = clouds.length - 1; i >= 0; i--) {
-    if (clouds[i].x <= -100) {
+    if (clouds[i].x < (-cloudImages[clouds[i].imageIndex].width - 10)) {
       clouds.splice(i, 1);
       numberOfDeleted++;
     }
