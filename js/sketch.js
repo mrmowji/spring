@@ -94,6 +94,7 @@ function Spring(x, y, width = 100) {
     y: y,
   };
   this.hit = false;
+  this.isHitOver = true;
   this.width = width;
   this.height = 50;
   this.initialHeight = this.height;
@@ -123,7 +124,7 @@ function Spring(x, y, width = 100) {
     }
 
     if (this.hit) {
-      this.location.y = playerLocation.y + playerHeight - 30;
+      this.location.y = this.restLocation.y + 10;
       if (
         this.location.y >
         this.restLocation.y + this.initialHeight - this.minHeight
@@ -162,15 +163,18 @@ function Spring(x, y, width = 100) {
 
   this.checkHit = function () {
     if (
-      playerLocation.y + playerHeight - 30 > this.location.y &&
+      playerLocation.y + playerHeight / 2 - 15 > this.location.y &&
       playerLocation.y < this.location.y + this.initialHeight &&
       playerLocation.x >= this.location.x &&
       playerLocation.x <= this.location.x + this.width
     ) {
       playerVelocity.y *= -1;
       this.hit = true;
+      if (this.isHitOver)
+      this.isHitOver = false;
     } else {
       this.hit = false;
+      this.isHitOver = true;
     }
   };
 }
@@ -179,7 +183,11 @@ function generateSprings() {
   if (springs.length === 0) {
     springs.push(new Spring((canvasWidth - 100) / 2, canvasHeight - 50 - 200));
   } else {
-    while (springs[springs.length - 1].location.x + springs[springs.length - 1].width < canvasWidth) {
+    while (
+      springs[springs.length - 1].location.x +
+        springs[springs.length - 1].width <
+      canvasWidth
+    ) {
       let x = generateRandomInteger(
         springs[springs.length - 1].location.x + 200,
         springs[springs.length - 1].location.x + 400
