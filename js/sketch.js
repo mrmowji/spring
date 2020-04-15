@@ -79,8 +79,8 @@ function generateClouds() {
   for (let i = 0; i < random() * 5; i++) {
     clouds.push({
       imageIndex: Math.floor(random() * cloudImages.length),
-      x: random() * canvasWidth,
-      y: random() * canvasHeight,
+      x: Math.floor(random() * canvasWidth),
+      y: Math.floor(random() * canvasHeight),
       distance: random() * 10,
     });
   }
@@ -90,7 +90,7 @@ function updateClouds() {
   let numberOfNewClouds = 0;
   for (let i = 0; i < clouds.length; i++) {
     clouds[i].x--;
-    if (clouds[i].x == Math.floor(canvasWidth / 2) - 10) {
+    if (clouds[i].x < (canvasWidth - cloudImages[clouds[i].imageIndex].width - 10)) {
       numberOfNewClouds++;
     }
   }
@@ -99,7 +99,7 @@ function updateClouds() {
       clouds.splice(i, 1);
     }
   }
-  for (let i = 0; i < numberOfNewClouds; i++) {
+  for (let i = 0; i < Math.min(5 - clouds.length, numberOfNewClouds); i++) {
     clouds.push({
       imageIndex: Math.floor(random() * cloudImages.length),
       x: random() * canvasWidth + canvasWidth,
