@@ -7,15 +7,16 @@ const framesPerSecond = 60;
 const framesTimeInterval = 1 / framesPerSecond;
 let pixelsPerMeter = 100;
 
-// game assets
-let cloudImages = [];
-
 // player variables
 let playerAcceleration = { x: 0, y: 9.8 * pixelsPerMeter };
 let playerVelocity = { x: 0, y: 0 };
-let playerLocation = { x: canvasWidth / 2, y: 60 };
+let playerLocation = { x: canvasWidth / 2, y: 150 };
 let playerWidth = 60;
 let playerHeight = 60;
+
+let cloudImages = [];
+let playerImage;
+let springImage;
 
 let springs = [];
 let clouds = [];
@@ -24,11 +25,11 @@ let clouds = [];
 // you can use instance mode:
 // let app = new p5(function (p) { p.setup = function() ... });
 function preload() {
-  // load static assets here
-  // just the loadings, not assignments
   for (let i = 1; i <= 11; i++) {
     cloudImages.push(loadImage(`images/cloud-${i < 10 ? "0" + i : i}.svg`));
   }
+  playerImage = loadImage("images/player.svg");
+  springImage = loadImage("images/spring.svg");
 }
 
 function setup() {
@@ -157,8 +158,7 @@ function Spring(x, y, width = 100) {
   };
 
   this.draw = function () {
-    fill(227, 64, 0);
-    rect(this.location.x, this.location.y, this.width, this.height, 20);
+    image(springImage, this.location.x, this.location.y, this.width, this.height);
   };
 
   this.checkHit = function () {
@@ -181,7 +181,7 @@ function Spring(x, y, width = 100) {
 
 function generateSprings() {
   if (springs.length === 0) {
-    springs.push(new Spring((canvasWidth - 100) / 2, canvasHeight - 50 - 200));
+    springs.push(new Spring((canvasWidth - 100) / 2, canvasHeight - 150));
   } else {
     while (
       springs[springs.length - 1].location.x +
@@ -257,10 +257,7 @@ function updatePlayerVelocity() {
 }
 
 function drawPlayer() {
-  strokeWeight(5);
-  stroke(86, 49, 74);
-  fill(242, 179, 24);
-  ellipse(playerLocation.x, playerLocation.y, playerWidth, playerHeight);
+  image(playerImage, playerLocation.x - playerWidth / 2, playerLocation.y - playerHeight / 2);
 }
 
 function updateSprings() {
