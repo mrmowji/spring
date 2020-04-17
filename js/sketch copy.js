@@ -7,9 +7,6 @@ const framesPerSecond = 60;
 const framesTimeInterval = 1 / framesPerSecond;
 let pixelsPerMeter = 100;
 let coordinateSystemCenterX = 0;
-let numberOfPassedPixels = 0;
-let interval;
-let seconds = 10;
 
 // player variables
 let playerAcceleration = { x: 0, y: 9.8 * pixelsPerMeter };
@@ -17,7 +14,7 @@ let playerVelocity = { x: 0, y: 0 };
 let playerWidth = 60;
 let playerHeight = 60;
 let playerLocation = {
-  x: 0,
+  x: canvasWidth / 2,
   y: canvasHeight - 150 - playerWidth / 2 + 3,
 };
 let playerPreviousLocation = {
@@ -25,7 +22,6 @@ let playerPreviousLocation = {
   y: playerLocation.y,
 };
 let playerResting = true;
-let playerLocationOffsetX = 0;
 
 let cloudImages = [];
 let playerImage;
@@ -51,47 +47,34 @@ function setup() {
   generateSprings();
   drawBackground();
   drawPlayer();
-  drawScore();
-  drawTime();
   doByInterval(); // must be after the game is started
 }
 
 function draw() {
+  drawBackground();
   frameRate(framesPerSecond);
   if (!playerResting) {
     updatePlayerAcceleration();
     updatePlayerLocation();
     updatePlayerVelocity();
   }
-  drawBackground();
   updateClouds();
   drawPlayer();
   generateSprings();
   checkSpringsHit();
   updateSprings();
   drawSprings();
-  drawScore();
-  drawTime();
-}
-
-function start() {
-  interval = setInterval(function () {
-    seconds--;
-    if (seconds === 0) {
-      clearInterval(interval);
-    }
-  }, 1000);
 }
 
 function doByInterval() {
   setInterval(function () {
     clouds.push({
       imageIndex: Math.floor(random() * cloudImages.length),
-      x: random() * canvasWidth + canvasWidth + numberOfPassedPixels,
+      x: random() * canvasWidth + canvasWidth,
       y: random() * canvasHeight,
       distance: random() * 10,
     });
-  }, 3000);
+  }, 5000);
 }
 
 function generateClouds() {
@@ -110,10 +93,7 @@ function updateClouds() {
     clouds[i].x--;
   }
   for (let i = clouds.length - 1; i >= 0; i--) {
-    if (
-      canvasWidth / 2 + clouds[i].x - numberOfPassedPixels <
-      -cloudImages[clouds[i].imageIndex].width - 10
-    ) {
+    if (clouds[i].x < -cloudImages[clouds[i].imageIndex].width - 10) {
       clouds.splice(i, 1);
     }
   }
@@ -133,7 +113,6 @@ function Spring(x, y, width = 100) {
   this.initialHeight = this.height;
   this.minHeight = 25;
   this.maxHeight = 75;
-  this.opacity = 255; // max value
 
   // spring simulation constants
   this.mass = 0.8;
@@ -191,17 +170,13 @@ function Spring(x, y, width = 100) {
   };
 
   this.draw = function () {
-    if (this.opacity !== 255) {
-      tint(255, this.opacity);
-    }
     image(
       springImage,
-      canvasWidth / 2 + (this.location.x - numberOfPassedPixels),
+      this.location.x,
       this.location.y,
       this.width,
       this.height
     );
-    tint(255, 255);
   };
 
   this.checkHit = function () {
@@ -218,8 +193,7 @@ function Spring(x, y, width = 100) {
           (playerLocation.y - playerPreviousLocation.y);
       if (!this.hitTheTop) {
         this.hitTheTop = Boolean(
-          collisionX >= this.location.x &&
-            collisionX <= this.location.x + this.width
+          collisionX >= this.location.x && collisionX <= this.location.x + this.width
         );
       }
       if (
@@ -237,7 +211,6 @@ function Spring(x, y, width = 100) {
               2 * playerAcceleration.y * (this.location.y - 150)
             );
             playerResting = false;
-            start();
             this.hit = true;
           }
         } else {
@@ -259,12 +232,12 @@ function Spring(x, y, width = 100) {
 
 function generateSprings() {
   if (springs.length === 0) {
-    springs.push(new Spring(-50, canvasHeight - 150));
-  } else if (seconds > 0) {
+    springs.push(new Spring((canvasWidth - 100) / 2, canvasHeight - 150));
+  } else {
     while (
       springs[springs.length - 1].location.x +
         springs[springs.length - 1].width <
-      canvasWidth + numberOfPassedPixels
+      canvasWidth
     ) {
       let x = generateRandomInteger(
         springs[springs.length - 1].location.x + 200,
@@ -273,23 +246,13 @@ function generateSprings() {
       let y = generateRandomInteger(canvasHeight - 300, canvasHeight - 100);
       springs.push(new Spring(x, y));
     }
-  } else {
-    for (let i = 0; i < springs.length; i++) {
-      if (canvasWidth / 2 + springs[i].location.x - numberOfPassedPixels > canvasWidth) {
-        springs.splice(i, 1);
-      }
-    }
   }
 }
 
 function drawBackground() {
   background(111, 197, 206);
   for (let i = 0; i < clouds.length; i++) {
-    image(
-      cloudImages[clouds[i].imageIndex],
-      canvasWidth / 2 + (clouds[i].x - numberOfPassedPixels),
-      clouds[i].y
-    );
+    image(cloudImages[clouds[i].imageIndex], clouds[i].x, clouds[i].y);
   }
 }
 
@@ -320,19 +283,16 @@ function updatePlayerLocation() {
       0.5 * playerAcceleration.y * framesTimeInterval ** 2 +
       playerVelocity.y * framesTimeInterval,
   };
-  if (deltaLocation.x + playerLocation.x <= numberOfPassedPixels) {
-    playerLocation.x += deltaLocation.x;
-    playerLocation.y += deltaLocation.y;
-    playerLocationOffsetX = 0;
+  if (deltaLocation.x + playerLocation.x <= canvasWidth / 2) {
+    playerLocation = {
+      x: deltaLocation.x + playerLocation.x,
+      y: deltaLocation.y + playerLocation.y,
+    };
   } else {
-    playerLocation.x += deltaLocation.x;
     playerLocation.y += deltaLocation.y;
-    playerLocationOffsetX = deltaLocation.x;
-    numberOfPassedPixels +=
-      playerLocationOffsetX > 0 ? playerLocationOffsetX : 0;
-    /*for (let spring of springs) {
+    for (let spring of springs) {
       spring.location.x += -deltaLocation.x;
-    }*/
+    }
   }
   if (playerLocation.y + playerHeight - 1000 > canvasHeight) {
     noLoop();
@@ -352,9 +312,7 @@ function updatePlayerVelocity() {
 function drawPlayer() {
   image(
     playerImage,
-    canvasWidth / 2 +
-      (playerLocation.x - numberOfPassedPixels) -
-      playerWidth / 2,
+    playerLocation.x - playerWidth / 2,
     playerLocation.y - playerHeight / 2
   );
 }
@@ -369,30 +327,6 @@ function drawSprings() {
   for (let spring of springs) {
     spring.draw();
   }
-}
-
-function drawScore() {
-  noStroke();
-  fill(0, 0, 0, 80);
-  rect(canvasWidth - 100, 20, 80, 40, 10);
-  fill(255, 255, 255);
-  textFont("Ubuntu", 25);
-  textAlign(CENTER, CENTER);
-  text(
-    Math.floor(numberOfPassedPixels / pixelsPerMeter) + "m",
-    canvasWidth - 60,
-    40
-  );
-}
-
-function drawTime() {
-  noStroke();
-  fill(0, 0, 0, 80);
-  rect(canvasWidth - 200, 20, 80, 40, 10);
-  fill(255, 255, 255);
-  textFont("Ubuntu", 25);
-  textAlign(CENTER, CENTER);
-  text(seconds + "s", canvasWidth - 160, 40);
 }
 
 function checkSpringsHit() {
