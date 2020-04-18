@@ -10,6 +10,7 @@ let coordinateSystemCenterX = 0;
 let numberOfPassedPixels = 0;
 let interval;
 let seconds = 10;
+let numberOfClouds = 5;
 
 // player variables
 let playerAcceleration = { x: 0, y: 9.8 * pixelsPerMeter };
@@ -33,6 +34,7 @@ let springImage;
 
 let springs = [];
 let clouds = [];
+let jumpSong;
 
 // this is global namespace mode
 // you can use instance mode:
@@ -43,6 +45,7 @@ function preload() {
   }
   playerImage = loadImage("images/player.svg");
   springImage = loadImage("images/spring.svg");
+  jumpSong = loadSound("sounds/jump.mp3");
 }
 
 function setup() {
@@ -50,25 +53,27 @@ function setup() {
   generateClouds();
   generateSprings();
   drawBackground();
+  drawClouds();
   drawPlayer();
+  drawSprings();
   drawScore();
   drawTime();
-  doByInterval(); // must be after the game is started
 }
 
 function draw() {
   frameRate(framesPerSecond);
   if (!playerResting) {
     updatePlayerAcceleration();
-    updatePlayerLocation();
     updatePlayerVelocity();
+    updatePlayerLocation();
   }
-  drawBackground();
   updateClouds();
-  drawPlayer();
   generateSprings();
   checkSpringsHit();
   updateSprings();
+  drawBackground();
+  drawClouds();
+  drawPlayer();
   drawSprings();
   drawScore();
   drawTime();
@@ -83,24 +88,12 @@ function start() {
   }, 1000);
 }
 
-function doByInterval() {
-  setInterval(function () {
-    clouds.push({
-      imageIndex: Math.floor(random() * cloudImages.length),
-      x: random() * canvasWidth + canvasWidth + numberOfPassedPixels,
-      y: random() * canvasHeight,
-      distance: random() * 10,
-    });
-  }, 3000);
-}
-
 function generateClouds() {
-  for (let i = 0; i < random() * 5; i++) {
+  for (let i = 0; i < numberOfClouds; i++) {
     clouds.push({
-      imageIndex: Math.floor(random() * cloudImages.length),
-      x: Math.floor(random() * canvasWidth),
-      y: Math.floor(random() * canvasHeight),
-      distance: random() * 10,
+      imageIndex: generateRandomInteger(0, cloudImages.length - 1),
+      x: generateRandomInteger(-canvasWidth / 2, canvasWidth),
+      y: generateRandomInteger(0, canvasHeight),
     });
   }
 }
@@ -108,13 +101,13 @@ function generateClouds() {
 function updateClouds() {
   for (let i = 0; i < clouds.length; i++) {
     clouds[i].x--;
-  }
-  for (let i = clouds.length - 1; i >= 0; i--) {
     if (
       canvasWidth / 2 + clouds[i].x - numberOfPassedPixels <
       -cloudImages[clouds[i].imageIndex].width - 10
     ) {
-      clouds.splice(i, 1);
+      clouds[i].imageIndex = generateRandomInteger(0, cloudImages.length - 1);
+      clouds[i].x = generateRandomInteger(numberOfPassedPixels + canvasWidth, numberOfPassedPixels + canvasWidth * 2);
+      clouds[i].y = generateRandomInteger(0, canvasHeight);
     }
   }
 }
@@ -133,7 +126,6 @@ function Spring(x, y, width = 100) {
   this.initialHeight = this.height;
   this.minHeight = 25;
   this.maxHeight = 75;
-  this.opacity = 255; // max value
 
   // spring simulation constants
   this.mass = 0.8;
@@ -191,9 +183,6 @@ function Spring(x, y, width = 100) {
   };
 
   this.draw = function () {
-    if (this.opacity !== 255) {
-      tint(255, this.opacity);
-    }
     image(
       springImage,
       canvasWidth / 2 + (this.location.x - numberOfPassedPixels),
@@ -201,7 +190,6 @@ function Spring(x, y, width = 100) {
       this.width,
       this.height
     );
-    tint(255, 255);
   };
 
   this.checkHit = function () {
@@ -237,6 +225,7 @@ function Spring(x, y, width = 100) {
               2 * playerAcceleration.y * (this.location.y - 150)
             );
             playerResting = false;
+            jumpSong.play();
             start();
             this.hit = true;
           }
@@ -245,6 +234,7 @@ function Spring(x, y, width = 100) {
             2 * playerAcceleration.y * (playerLocation.y - 150)
           );
           this.hit = true;
+          jumpSong.play();
         }
       } else {
         this.hit = false;
@@ -284,6 +274,9 @@ function generateSprings() {
 
 function drawBackground() {
   background(111, 197, 206);
+}
+
+function drawClouds() {
   for (let i = 0; i < clouds.length; i++) {
     image(
       cloudImages[clouds[i].imageIndex],
@@ -305,7 +298,13 @@ function updatePlayerAcceleration() {
   } else if (isLeftPressed) {
     playerAcceleration.x = -10 * pixelsPerMeter;
   } else {
-    playerAcceleration.x = 0;
+    if (playerVelocity.x > 0) {
+      playerAcceleration.x = -100;
+    } else if (playerVelocity.x < 0) {
+      playerAcceleration.x = 100;
+    } else {
+      playerAcceleration.x = 0;
+    }
   }
 }
 
@@ -330,9 +329,6 @@ function updatePlayerLocation() {
     playerLocationOffsetX = deltaLocation.x;
     numberOfPassedPixels +=
       playerLocationOffsetX > 0 ? playerLocationOffsetX : 0;
-    /*for (let spring of springs) {
-      spring.location.x += -deltaLocation.x;
-    }*/
   }
   if (playerLocation.y + playerHeight - 1000 > canvasHeight) {
     noLoop();
