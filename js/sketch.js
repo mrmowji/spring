@@ -9,7 +9,7 @@ let pixelsPerMeter = 100;
 let coordinateSystemCenterX = 0;
 let numberOfPassedPixels = 0;
 let interval;
-let seconds = 10;
+let seconds = 30;
 let numberOfClouds = 5;
 
 // player variables
@@ -31,10 +31,17 @@ let playerLocationOffsetX = 0;
 let cloudImages = [];
 let playerImage;
 let springImage;
+let clockImage;
+let clockWidth;
+let clockHeight;
+let clockVelocity = 3;
 
 let springs = [];
 let clouds = [];
-let jumpSong;
+let jumpSound;
+let catchClockSound;
+let clockGenerated = false;
+let clockLocation = { x: 0, y: 0 };
 
 // this is global namespace mode
 // you can use instance mode:
@@ -45,13 +52,18 @@ function preload() {
   }
   playerImage = loadImage("images/player.svg");
   springImage = loadImage("images/spring.svg");
-  jumpSong = loadSound("sounds/jump.mp3");
+  clockImage = loadImage("images/clock.svg");
+  jumpSound = loadSound("sounds/jump.mp3");
+  catchClockSound = loadSound("sounds/catch-clock-2.mp3");
 }
 
 function setup() {
+  clockWidth = clockImage.width;
+  clockHeight = clockImage.height;
   createCanvas(canvasWidth, canvasHeight);
   generateClouds();
   generateSprings();
+  updateClockLocation();
   drawBackground();
   drawClouds();
   drawPlayer();
@@ -62,6 +74,8 @@ function setup() {
 
 function draw() {
   frameRate(framesPerSecond);
+  drawBackground();
+  drawClouds();
   if (!playerResting) {
     updatePlayerAcceleration();
     updatePlayerVelocity();
@@ -71,8 +85,6 @@ function draw() {
   generateSprings();
   checkSpringsHit();
   updateSprings();
-  drawBackground();
-  drawClouds();
   drawPlayer();
   drawSprings();
   drawScore();
@@ -84,6 +96,7 @@ function start() {
     seconds--;
     if (seconds === 0) {
       clearInterval(interval);
+      clockLocation.x = -canvasWidth;
     }
   }, 1000);
 }
@@ -106,7 +119,10 @@ function updateClouds() {
       -cloudImages[clouds[i].imageIndex].width - 10
     ) {
       clouds[i].imageIndex = generateRandomInteger(0, cloudImages.length - 1);
-      clouds[i].x = generateRandomInteger(numberOfPassedPixels + canvasWidth, numberOfPassedPixels + canvasWidth * 2);
+      clouds[i].x = generateRandomInteger(
+        numberOfPassedPixels + canvasWidth,
+        numberOfPassedPixels + canvasWidth * 2
+      );
       clouds[i].y = generateRandomInteger(0, canvasHeight);
     }
   }
@@ -225,7 +241,7 @@ function Spring(x, y, width = 100) {
               2 * playerAcceleration.y * (this.location.y - 150)
             );
             playerResting = false;
-            jumpSong.play();
+            jumpSound.play();
             start();
             this.hit = true;
           }
@@ -234,7 +250,7 @@ function Spring(x, y, width = 100) {
             2 * playerAcceleration.y * (playerLocation.y - 150)
           );
           this.hit = true;
-          jumpSong.play();
+          jumpSound.play();
         }
       } else {
         this.hit = false;
@@ -265,7 +281,10 @@ function generateSprings() {
     }
   } else {
     for (let i = 0; i < springs.length; i++) {
-      if (canvasWidth / 2 + springs[i].location.x - numberOfPassedPixels > canvasWidth) {
+      if (
+        canvasWidth / 2 + springs[i].location.x - numberOfPassedPixels >
+        canvasWidth
+      ) {
         springs.splice(i, 1);
       }
     }
@@ -330,9 +349,33 @@ function updatePlayerLocation() {
     numberOfPassedPixels +=
       playerLocationOffsetX > 0 ? playerLocationOffsetX : 0;
   }
+  if (playerLocation.x + canvasWidth / 2 > clockLocation.x) {
+    if (
+      clockLocation.x <= playerLocation.x + playerWidth &&
+      clockLocation.x >= playerLocation.x - playerWidth &&
+      clockLocation.y <= playerLocation.y + playerHeight &&
+      clockLocation.y >= playerLocation.y - playerHeight
+    ) {
+      catchClockSound.play();
+      seconds += 30;
+      updateClockLocation();
+    }
+    drawClock();
+    if (playerLocation.x > clockLocation.x + canvasWidth) {
+      updateClockLocation();
+    }
+  }
   if (playerLocation.y + playerHeight - 1000 > canvasHeight) {
     noLoop();
   }
+}
+
+function drawClock() {
+  image(
+    clockImage,
+    canvasWidth / 2 + (clockLocation.x - numberOfPassedPixels) - clockWidth / 2,
+    clockLocation.y - clockHeight / 2
+  );
 }
 
 function updatePlayerVelocity() {
@@ -395,6 +438,11 @@ function checkSpringsHit() {
   for (let spring of springs) {
     spring.checkHit();
   }
+}
+
+function updateClockLocation() {
+  clockLocation.x = generateRandomInteger(clockLocation.x + canvasWidth, clockLocation.x + canvasWidth + 2000);
+  clockLocation.y = generateRandomInteger(150, 300);
 }
 
 function generateRandomInteger(min, max) {
