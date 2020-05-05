@@ -26,6 +26,7 @@ export default function sketch(p) {
   let jumpSound;
   let catchClockSound;
   let bellSound;
+  let lostSound;
 
   p.preload = function () {
     loadImages();
@@ -78,6 +79,7 @@ export default function sketch(p) {
     jumpSound = p.loadSound("sounds/jump.mp3");
     catchClockSound = p.loadSound("sounds/catch-clock-2.mp3");
     bellSound = p.loadSound("sounds/bell-1.mp3");
+    lostSound = p.loadSound("sounds/lost.mp3");
   }
 
   function calculateNumberOfSprings() {
@@ -93,13 +95,15 @@ export default function sketch(p) {
   function start() {
     isStarted = true;
     let interval = setInterval(function () {
-      seconds--;
-      if (seconds === 0) {
-        if (isStarted) {
+      if (isStarted) {
+        seconds--;
+        if (seconds === 0) {
           clearInterval(interval);
           clock.hide();
           bellSound.play();
         }
+      } else {
+        clearInterval(interval);
       }
     }, 1000);
   }
@@ -244,9 +248,12 @@ export default function sketch(p) {
   }
 
   function checkGameOver() {
-    if (player.isOut()) {
+    if (player.isOut() && isStarted) {
       isStarted = false;
-      p.noLoop();
+      seconds = config.seconds;
+      //p.noLoop();
+      lostSound.play();
+      player.numberOfPassedPixels = 0;
     }
   }
 }

@@ -85,7 +85,7 @@ function Player(options) {
   };
 
   this.isOut = () => {
-    return (this.location.y + this.height - 1000 > config.canvasHeight);
+    return (this.location.y + this.height - 200 > config.canvasHeight);
   };
 
   this.jump = () => {
