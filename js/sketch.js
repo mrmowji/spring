@@ -1,5 +1,8 @@
 "use strict";
 
+// TODO: consider using translation (translate(x, y)) from p5js to specify objects location
+// TODO: use scale() to scale the game for different screen dimensions
+
 import { config } from "./config.js";
 import { util } from "./util.js";
 import { Spring } from "./spring.js";
@@ -92,6 +95,7 @@ export default function sketch(p) {
         1);
   }
 
+  // TODO: use millis() instead of interval
   function start() {
     isStarted = true;
     let interval = setInterval(function () {
